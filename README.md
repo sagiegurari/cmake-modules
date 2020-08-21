@@ -32,7 +32,7 @@ list(APPEND CMAKE_MODULE_PATH "cmake-modules/src")
 Load the cmake module
 
 ```cmake
-include(utils.cmake)
+include(utils)
 ```
 
 Use the different capabilities in your CMakeLists.txt for exmaple:
