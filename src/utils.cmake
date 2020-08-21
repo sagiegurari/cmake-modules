@@ -23,7 +23,7 @@ endmacro(utils_git_clone)
 # * Github repo name
 # * Git tag name
 macro(utils_github_clone_repo)
-  utils_git_clone(git@github.com:${ARGV0}/${ARGV1}.git ${ARGV1} ${ARGV2})
+  utils_git_clone(https://github.com/${ARGV0}/${ARGV1}.git ${ARGV1} ${ARGV2})
 endmacro(utils_github_clone_repo)
 
 # Sets variables to an external library.
