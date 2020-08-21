@@ -26,7 +26,7 @@ Those include:
 Include the cmake modules in the module path
 
 ```cmake
-list(APPEND CMAKE_MODULE_PATH "./cmake-modules/src")
+list(APPEND CMAKE_MODULE_PATH "cmake-modules/src")
 ```
 
 Load the cmake module
