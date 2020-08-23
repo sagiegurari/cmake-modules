@@ -112,8 +112,9 @@ endfunction(utils_add_external_github_lib)
 # * COMPILATION_FLAGS - Compliation flags
 # * BINARY_DIRECTORY - Binary directory
 function(utils_setup_c_test)
-  set(oneValueArgs NAME ADDITIONAL_SOURCES COMPILATION_FLAGS BINARY_DIRECTORY)
-  cmake_parse_arguments(UTILS_SETUP_C_TEST "" "${oneValueArgs}" "" ${ARGN})
+  set(oneValueArgs NAME COMPILATION_FLAGS BINARY_DIRECTORY)
+  set(multiValueArgs ADDITIONAL_SOURCES)
+  cmake_parse_arguments(UTILS_SETUP_C_TEST "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   message("Adding Test: ${UTILS_SETUP_C_TEST_NAME}")
   add_executable(test_${UTILS_SETUP_C_TEST_NAME} tests/test_${UTILS_SETUP_C_TEST_NAME}.c ${UTILS_SETUP_C_TEST_ADDITIONAL_SOURCES})
@@ -124,8 +125,8 @@ function(utils_setup_c_test)
   )
   add_test(
     NAME ${UTILS_SETUP_C_TEST_NAME}
-    WORKING_DIRECTORY ${UTILS_SETUP_C_BINARY_DIRECTORY}
+    WORKING_DIRECTORY ${UTILS_SETUP_C_TEST_BINARY_DIRECTORY}
     COMMAND test_${UTILS_SETUP_C_TEST_NAME}
   )
-endfunction(utils_setup_c_test)
+endfunction()
 
