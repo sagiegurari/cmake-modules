@@ -38,7 +38,20 @@ include(utils)
 Use the different capabilities in your CMakeLists.txt for exmaple:
 
 ```cmake
-utils_add_external_github_lib(sagiegurari c_string_buffer "v0.1.2" string_buffer target)
+utils_add_external_github_lib(
+  REPO_USERNAME sagiegurari
+  REPO_NAME c_scriptexec
+  TAG_NAME "0.1.3"
+  LIBRARY_NAME scriptexec
+  LIBRARY_PARENT_DIRECTORY target
+)
+
+utils_setup_c_test(
+  NAME stability
+  ADDITIONAL_SOURCES "test/core.c;test/core.h"
+  COMPILATION_FLAGS "-Werror -Wall -Wextra -Wcast-align -Wunused -Wshadow -Wpedantic"
+  BINARY_DIRECTORY "target/bin"
+)
 ```
 
 ## Contributing
