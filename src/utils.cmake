@@ -4,7 +4,7 @@
 # Params:
 # * URL - Git repo URL
 # * REPO_NAME - Git repo name
-# * TAG_NAME - Git tag name
+# * [TAG_NAME] - Optional git tag name
 function(utils_git_clone)
   set(oneValueArgs URL REPO_NAME TAG_NAME)
   cmake_parse_arguments(UTILS_GIT_CLONE "" "${oneValueArgs}" "" ${ARGN})
@@ -18,10 +18,13 @@ function(utils_git_clone)
   execute_process(
     COMMAND git clone ${UTILS_GIT_CLONE_URL}
   )
-  execute_process(
-    COMMAND git checkout tags/${UTILS_GIT_CLONE_TAG_NAME}
-    WORKING_DIRECTORY ${UTILS_GIT_CLONE_REPO_NAME}
-  )
+
+  if(UTILS_GIT_CLONE_TAG_NAME)
+    execute_process(
+      COMMAND git checkout tags/${UTILS_GIT_CLONE_TAG_NAME}
+      WORKING_DIRECTORY ${UTILS_GIT_CLONE_REPO_NAME}
+    )
+  endif()
 endfunction(utils_git_clone)
 
 # Downloads a git repository
@@ -29,7 +32,7 @@ endfunction(utils_git_clone)
 # Params:
 # * REPO_USERNAME - Github repo user name
 # * REPO_NAME - Github repo name
-# * TAG_NAME - Git tag name
+# * [TAG_NAME] - Optional git tag name
 function(utils_github_clone_repo)
   set(oneValueArgs REPO_USERNAME REPO_NAME TAG_NAME)
   cmake_parse_arguments(UTILS_GITHUB_CLONE_REPO "" "${oneValueArgs}" "" ${ARGN})
@@ -67,7 +70,7 @@ endfunction(utils_set_standard_external_lib_variables)
 # Params:
 # * REPO_USERNAME - Github repo user name
 # * REPO_NAME - Github repo name
-# * TAG_NAME - Git tag name
+# * [TAG_NAME] - Optional git tag name
 # * LIBRARY_NAME - Library name
 # * LIBRARY_PARENT_DIRECTORY - Library parent directory
 function(utils_add_external_github_lib)
@@ -101,32 +104,34 @@ function(utils_add_external_github_lib)
   message("${X_EXTERNAL_LIB_NAME}_INCLUDE ${X_EXTERNAL_LIB_NAME_INCLUDE}")
 endfunction(utils_add_external_github_lib)
 
-# Adds a test target with the given name.
+# Adds a test target/s with the given name/s.
 # Tests are expected to be located at the tests directory and should be named
 # as "test_<test name>.c"
 # In addition, the CMAKE_PROJECT_NAME variable is expected to be defined.
 #
 # Params:
-# * NAME - Test name
+# * NAME - Test name/s
 # * ADDITIONAL_SOURCES - Additional test sources
 # * COMPILATION_FLAGS - Compliation flags
 # * BINARY_DIRECTORY - Binary directory
 function(utils_setup_c_test)
-  set(oneValueArgs NAME COMPILATION_FLAGS BINARY_DIRECTORY)
-  set(multiValueArgs ADDITIONAL_SOURCES)
+  set(oneValueArgs COMPILATION_FLAGS BINARY_DIRECTORY)
+  set(multiValueArgs NAME ADDITIONAL_SOURCES)
   cmake_parse_arguments(UTILS_SETUP_C_TEST "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  message("Adding Test: ${UTILS_SETUP_C_TEST_NAME}")
-  add_executable(test_${UTILS_SETUP_C_TEST_NAME} tests/test_${UTILS_SETUP_C_TEST_NAME}.c ${UTILS_SETUP_C_TEST_ADDITIONAL_SOURCES})
-  target_link_libraries(test_${UTILS_SETUP_C_TEST_NAME} ${CMAKE_PROJECT_NAME})
-  set_target_properties(
-    test_${UTILS_SETUP_C_TEST_NAME}
-    PROPERTIES COMPILE_FLAGS "${UTILS_SETUP_C_TEST_COMPILATION_FLAGS}"
-  )
-  add_test(
-    NAME ${UTILS_SETUP_C_TEST_NAME}
-    WORKING_DIRECTORY ${UTILS_SETUP_C_TEST_BINARY_DIRECTORY}
-    COMMAND test_${UTILS_SETUP_C_TEST_NAME}
-  )
+  foreach(TEST_NAME ${UTILS_SETUP_C_TEST_NAME})
+    message("Adding Test: ${TEST_NAME}")
+    add_executable(test_${TEST_NAME} tests/test_${TEST_NAME}.c ${UTILS_SETUP_C_TEST_ADDITIONAL_SOURCES})
+    target_link_libraries(test_${TEST_NAME} ${CMAKE_PROJECT_NAME})
+    set_target_properties(
+      test_${TEST_NAME}
+      PROPERTIES COMPILE_FLAGS "${UTILS_SETUP_C_TEST_COMPILATION_FLAGS}"
+    )
+    add_test(
+      NAME ${TEST_NAME}
+      WORKING_DIRECTORY ${UTILS_SETUP_C_TEST_BINARY_DIRECTORY}
+      COMMAND test_${TEST_NAME}
+    )
+  endforeach(TEST_NAME)
 endfunction(utils_setup_c_test)
 
