@@ -2,61 +2,104 @@
 # Downloads a git repository
 #
 # Params:
-# * Git repo URL
-# * Git repo name
-# * Git tag name
-macro(utils_git_clone)
-  message("Cloning Git Repository: ${ARGV1} URL: ${ARGV0} Tag: ${ARGV2}")
+# * URL - Git repo URL
+# * REPO_NAME - Git repo name
+# * TAG_NAME - Git tag name
+function(utils_git_clone)
+  set(oneValueArgs URL REPO_NAME TAG_NAME)
+  cmake_parse_arguments(UTILS_GIT_CLONE "" "${oneValueArgs}" "" ${ARGN})
+
+  message(
+    "Cloning Git Repository: ${UTILS_GIT_CLONE_REPO_NAME} "
+    "URL: ${UTILS_GIT_CLONE_URL} "
+    "Tag: ${UTILS_GIT_CLONE_TAG_NAME}"
+  )
+
   execute_process(
-    COMMAND git clone ${ARGV0}
+    COMMAND git clone ${UTILS_GIT_CLONE_URL}
   )
   execute_process(
-    COMMAND git checkout tags/${ARGV2}
-    WORKING_DIRECTORY ${ARGV1}
+    COMMAND git checkout tags/${UTILS_GIT_CLONE_TAG_NAME}
+    WORKING_DIRECTORY ${UTILS_GIT_CLONE_REPO_NAME}
   )
-endmacro(utils_git_clone)
+endfunction(utils_git_clone)
 
 # Downloads a git repository
 #
 # Params:
-# * Github repo user name
-# * Github repo name
-# * Git tag name
-macro(utils_github_clone_repo)
-  utils_git_clone(https://github.com/${ARGV0}/${ARGV1}.git ${ARGV1} ${ARGV2})
-endmacro(utils_github_clone_repo)
+# * REPO_USERNAME - Github repo user name
+# * REPO_NAME - Github repo name
+# * TAG_NAME - Git tag name
+function(utils_github_clone_repo)
+  set(oneValueArgs REPO_USERNAME REPO_NAME TAG_NAME)
+  cmake_parse_arguments(UTILS_GITHUB_CLONE_REPO "" "${oneValueArgs}" "" ${ARGN})
+
+  utils_git_clone(
+    URL https://github.com/${UTILS_GITHUB_CLONE_REPO_REPO_USERNAME}/${UTILS_GITHUB_CLONE_REPO_REPO_NAME}.git
+    REPO_NAME ${UTILS_GITHUB_CLONE_REPO_REPO_NAME}
+    TAG_NAME ${UTILS_GITHUB_CLONE_REPO_TAG_NAME}
+  )
+endfunction(utils_github_clone_repo)
 
 # Sets variables to an external library.
 #
 # Params:
-# * Library name
-# * Library path
-macro(utils_set_standard_external_lib_variables)
-  string(TOUPPER ${ARGV0} X_EXTERNAL_LIB_NAME)
-  set("${X_EXTERNAL_LIB_NAME}_ROOT" "${ARGV1}")
-  file(GLOB "${X_EXTERNAL_LIB_NAME}_SOURCES" "${${X_EXTERNAL_LIB_NAME}_ROOT}/src/*.c*")
-  set("${X_EXTERNAL_LIB_NAME}_INCLUDE" "${${X_EXTERNAL_LIB_NAME}_ROOT}/include")
+# * NAME - Library name
+# * PATH - Library path
+function(utils_set_standard_external_lib_variables)
+  set(oneValueArgs NAME PATH)
+  cmake_parse_arguments(UTILS_SET_STANDARD_EXTERNAL_LIB_VARIABLES "" "${oneValueArgs}" "" ${ARGN})
 
-  message("New defined variables:")
-  message("${X_EXTERNAL_LIB_NAME}_ROOT ${${X_EXTERNAL_LIB_NAME}_ROOT}")
-  message("${X_EXTERNAL_LIB_NAME}_SOURCES ${${X_EXTERNAL_LIB_NAME}_SOURCES}")
-  message("${X_EXTERNAL_LIB_NAME}_INCLUDE ${${X_EXTERNAL_LIB_NAME}_INCLUDE}")
-endmacro()
+  string(TOUPPER "${UTILS_SET_STANDARD_EXTERNAL_LIB_VARIABLES_NAME}" X_EXTERNAL_LIB_NAME)
+  set("X_EXTERNAL_LIB_NAME_ROOT" "${UTILS_SET_STANDARD_EXTERNAL_LIB_VARIABLES_PATH}")
+  file(GLOB "X_EXTERNAL_LIB_NAME_SOURCES" "${X_EXTERNAL_LIB_NAME_ROOT}/src/*.c*")
+  set("X_EXTERNAL_LIB_NAME_INCLUDE" "${X_EXTERNAL_LIB_NAME_ROOT}/include")
+
+  set("X_EXTERNAL_LIB_NAME" "${X_EXTERNAL_LIB_NAME}" PARENT_SCOPE)
+  set("${X_EXTERNAL_LIB_NAME}_ROOT" "${X_EXTERNAL_LIB_NAME_ROOT}" PARENT_SCOPE)
+  set("${X_EXTERNAL_LIB_NAME}_SOURCES" "${X_EXTERNAL_LIB_NAME_SOURCES}" PARENT_SCOPE)
+  set("${X_EXTERNAL_LIB_NAME}_INCLUDE" "${X_EXTERNAL_LIB_NAME_INCLUDE}" PARENT_SCOPE)
+endfunction()
 
 # Downloads an external repo from github and sets variables to the external
 # library source and header directories (if they are structured as expected).
 #
 # Params:
-# * Github repo user name
-# * Github repo name
-# * Git tag name
-# * Library name
-# * Library parent directory
-macro(utils_add_external_github_lib)
-  message("Adding External Library: ${ARGV3} Github Repostiory: ${ARGV0}/${ARGV1} Tag: ${ARGV2}")
-  utils_github_clone_repo(${ARGV0} ${ARGV1} ${ARGV2})
-  utils_set_standard_external_lib_variables(${ARGV3} "${ARGV4}/${ARGV1}")
-endmacro(utils_add_external_github_lib)
+# * REPO_USERNAME - Github repo user name
+# * REPO_NAME - Github repo name
+# * TAG_NAME - Git tag name
+# * LIBRARY_NAME - Library name
+# * LIBRARY_PARENT_DIRECTORY - Library parent directory
+function(utils_add_external_github_lib)
+  set(oneValueArgs REPO_USERNAME REPO_NAME TAG_NAME LIBRARY_NAME LIBRARY_PARENT_DIRECTORY)
+  cmake_parse_arguments(UTILS_ADD_EXTERNAL_GITHUB_LIB "" "${oneValueArgs}" "" ${ARGN})
+
+  message(
+    "Adding External Library: ${UTILS_ADD_EXTERNAL_GITHUB_LIB_LIBRARY_NAME} "
+    "Github Repostiory: ${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_USERNAME}/${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_NAME} "
+    "Tag: ${UTILS_ADD_EXTERNAL_GITHUB_LIB_TAG_NAME}"
+  )
+
+  utils_github_clone_repo(
+    REPO_USERNAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_USERNAME}
+    REPO_NAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_NAME}
+    TAG_NAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_TAG_NAME}
+  )
+
+  utils_set_standard_external_lib_variables(
+    NAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_LIBRARY_NAME}
+    PATH "${UTILS_ADD_EXTERNAL_GITHUB_LIB_LIBRARY_PARENT_DIRECTORY}/${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_NAME}"
+  )
+  # proxy variables
+  set("${X_EXTERNAL_LIB_NAME}_ROOT" "${${X_EXTERNAL_LIB_NAME}_ROOT}" PARENT_SCOPE)
+  set("${X_EXTERNAL_LIB_NAME}_SOURCES" "${${X_EXTERNAL_LIB_NAME}_SOURCES}" PARENT_SCOPE)
+  set("${X_EXTERNAL_LIB_NAME}_INCLUDE" "${${X_EXTERNAL_LIB_NAME}_INCLUDE}" PARENT_SCOPE)
+
+  message("External Library Variables:")
+  message("${X_EXTERNAL_LIB_NAME}_ROOT ${X_EXTERNAL_LIB_NAME_ROOT}")
+  message("${X_EXTERNAL_LIB_NAME}_SOURCES ${X_EXTERNAL_LIB_NAME_SOURCES}")
+  message("${X_EXTERNAL_LIB_NAME}_INCLUDE ${X_EXTERNAL_LIB_NAME_INCLUDE}")
+endfunction(utils_add_external_github_lib)
 
 # Adds a test target with the given name.
 # Tests are expected to be located at the tests directory and should be named
@@ -64,17 +107,25 @@ endmacro(utils_add_external_github_lib)
 # In addition, the CMAKE_PROJECT_NAME variable is expected to be defined.
 #
 # Params:
-# * Test name
-# * Additional test sources
-# * Compliation flags
-# * Binary directory
-macro(utils_setup_c_test)
-  message("Adding Test: ${ARGV0}")
-  add_executable(test_${ARGV0} tests/test_${ARGV0}.c ${ARGV1})
-  target_link_libraries(test_${ARGV0} ${CMAKE_PROJECT_NAME})
-  set_target_properties(test_${ARGV0} PROPERTIES COMPILE_FLAGS "${ARGV2}")
-  add_test(NAME ${ARGV0}
-    WORKING_DIRECTORY ${ARGV3}
-    COMMAND test_${ARGV0})
-endmacro(utils_setup_c_test)
+# * NAME - Test name
+# * ADDITIONAL_SOURCES - Additional test sources
+# * COMPILATION_FLAGS - Compliation flags
+# * BINARY_DIRECTORY - Binary directory
+function(utils_setup_c_test)
+  set(oneValueArgs NAME ADDITIONAL_SOURCES COMPILATION_FLAGS BINARY_DIRECTORY)
+  cmake_parse_arguments(UTILS_SETUP_C_TEST "" "${oneValueArgs}" "" ${ARGN})
+
+  message("Adding Test: ${UTILS_SETUP_C_TEST_NAME}")
+  add_executable(test_${UTILS_SETUP_C_TEST_NAME} tests/test_${UTILS_SETUP_C_TEST_NAME}.c ${UTILS_SETUP_C_TEST_ADDITIONAL_SOURCES})
+  target_link_libraries(test_${UTILS_SETUP_C_TEST_NAME} ${CMAKE_PROJECT_NAME})
+  set_target_properties(
+    test_${UTILS_SETUP_C_TEST_NAME}
+    PROPERTIES COMPILE_FLAGS "${UTILS_SETUP_C_TEST_COMPILATION_FLAGS}"
+  )
+  add_test(
+    NAME ${UTILS_SETUP_C_TEST_NAME}
+    WORKING_DIRECTORY ${UTILS_SETUP_C_BINARY_DIRECTORY}
+    COMMAND test_${UTILS_SETUP_C_TEST_NAME}
+  )
+endfunction(utils_setup_c_test)
 
