@@ -59,7 +59,7 @@ function(utils_set_standard_external_lib_variables)
   set("${X_EXTERNAL_LIB_NAME}_ROOT" "${X_EXTERNAL_LIB_NAME_ROOT}" PARENT_SCOPE)
   set("${X_EXTERNAL_LIB_NAME}_SOURCES" "${X_EXTERNAL_LIB_NAME_SOURCES}" PARENT_SCOPE)
   set("${X_EXTERNAL_LIB_NAME}_INCLUDE" "${X_EXTERNAL_LIB_NAME_INCLUDE}" PARENT_SCOPE)
-endfunction()
+endfunction(utils_set_standard_external_lib_variables)
 
 # Downloads an external repo from github and sets variables to the external
 # library source and header directories (if they are structured as expected).
@@ -128,5 +128,5 @@ function(utils_setup_c_test)
     WORKING_DIRECTORY ${UTILS_SETUP_C_TEST_BINARY_DIRECTORY}
     COMMAND test_${UTILS_SETUP_C_TEST_NAME}
   )
-endfunction()
+endfunction(utils_setup_c_test)
 
