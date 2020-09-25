@@ -47,7 +47,17 @@ utils_add_external_github_lib(
 )
 
 utils_setup_c_test(
-  NAME stability
+  NAME
+    stability
+    long_run
+    valid_input
+    invalid_input
+  ADDITIONAL_SOURCES "test/core.c;test/core.h"
+  COMPILATION_FLAGS "-Werror -Wall -Wextra -Wcast-align -Wunused -Wshadow -Wpedantic"
+  BINARY_DIRECTORY "target/bin"
+)
+
+utils_setup_c_all_tests(
   ADDITIONAL_SOURCES "test/core.c;test/core.h"
   COMPILATION_FLAGS "-Werror -Wall -Wextra -Wcast-align -Wunused -Wshadow -Wpedantic"
   BINARY_DIRECTORY "target/bin"

@@ -135,3 +135,40 @@ function(utils_setup_c_test)
   endforeach(TEST_NAME)
 endfunction(utils_setup_c_test)
 
+# Adds test targets for all test files found under the tests directory.
+# Tests are expected to be located at the tests directory and should be named
+# as "test_<test name>.c"
+# In addition, the CMAKE_PROJECT_NAME variable is expected to be defined.
+#
+# Params:
+# * ADDITIONAL_SOURCES - Additional test sources
+# * COMPILATION_FLAGS - Compliation flags
+# * BINARY_DIRECTORY - Binary directory
+function(utils_setup_c_all_tests)
+  set(oneValueArgs COMPILATION_FLAGS BINARY_DIRECTORY)
+  set(multiValueArgs ADDITIONAL_SOURCES)
+  cmake_parse_arguments(UTILS_SETUP_C_ALL_TESTS "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  file(
+    GLOB TEST_FILES
+    LIST_DIRECTORIES false
+    ./tests/test_*.c
+  )
+
+  foreach(TEST_NAME ${TEST_FILES})
+    string(REGEX REPLACE ".*/tests/test_" "" TEST_NAME ${TEST_NAME})
+    string(REGEX REPLACE "\\.c" "" TEST_NAME ${TEST_NAME})
+
+    list(APPEND TEST_NAMES ${TEST_NAME})
+  endforeach(TEST_NAME)
+
+  message("Found Tests: ${TEST_NAMES}")
+
+  utils_setup_c_test(
+    NAME ${TEST_NAMES}
+    ADDITIONAL_SOURCES "${UTILS_SETUP_C_ALL_TESTS_ADDITIONAL_SOURCES}"
+    COMPILATION_FLAGS "${UTILS_SETUP_C_ALL_TESTS_COMPILATION_FLAGS}"
+    BINARY_DIRECTORY "${UTILS_SETUP_C_ALL_TESTS_BINARY_DIRECTORY}"
+  )
+endfunction(utils_setup_c_all_tests)
+
