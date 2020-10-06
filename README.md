@@ -3,7 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/sagiegurari/cmake-modules)](https://github.com/sagiegurari/cmake-modules/releases)
 [![license](https://img.shields.io/github/license/sagiegurari/cmake-modules)](https://github.com/sagiegurari/cmake-modules/blob/master/LICENSE)
 
-> Reusable cmake utilties for C projects.
+> Reusable cmake utilities for C projects.
 
 * [Overview](#overview)
 * [Usage](#usage)
@@ -35,7 +35,16 @@ Load the cmake module
 include(utils)
 ```
 
-Use the different capabilities in your CMakeLists.txt for exmaple:
+Another way is to automatically download it if missing, for example:
+
+```cmake
+if(NOT EXISTS "target/cmake-modules/src/utils.cmake")
+  execute_process(COMMAND git clone https://github.com/sagiegurari/cmake-modules.git)
+endif()
+include("target/cmake-modules/src/utils.cmake")
+```
+
+Use the different capabilities in your CMakeLists.txt for example:
 
 ```cmake
 utils_add_external_github_lib(
