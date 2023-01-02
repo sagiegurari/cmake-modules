@@ -114,15 +114,16 @@ endfunction(utils_add_external_github_lib)
 # * ADDITIONAL_SOURCES - Additional test sources
 # * COMPILATION_FLAGS - Compliation flags
 # * BINARY_DIRECTORY - Binary directory
+# * LIBRARIES - Additional test libraries
 function(utils_setup_c_test)
   set(oneValueArgs COMPILATION_FLAGS BINARY_DIRECTORY)
-  set(multiValueArgs NAME ADDITIONAL_SOURCES)
+  set(multiValueArgs NAME ADDITIONAL_SOURCES LIBRARIES)
   cmake_parse_arguments(UTILS_SETUP_C_TEST "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   foreach(TEST_NAME ${UTILS_SETUP_C_TEST_NAME})
     message("Adding Test: ${TEST_NAME}")
     add_executable(test_${TEST_NAME} tests/test_${TEST_NAME}.c ${UTILS_SETUP_C_TEST_ADDITIONAL_SOURCES})
-    target_link_libraries(test_${TEST_NAME} ${CMAKE_PROJECT_NAME})
+    target_link_libraries(test_${TEST_NAME} ${CMAKE_PROJECT_NAME} ${UTILS_SETUP_C_TEST_LIBRARIES})
     set_target_properties(
       test_${TEST_NAME}
       PROPERTIES COMPILE_FLAGS "${UTILS_SETUP_C_TEST_COMPILATION_FLAGS}"
@@ -144,9 +145,10 @@ endfunction(utils_setup_c_test)
 # * ADDITIONAL_SOURCES - Additional test sources
 # * COMPILATION_FLAGS - Compliation flags
 # * BINARY_DIRECTORY - Binary directory
+# * LIBRARIES - Additional test libraries
 function(utils_setup_c_all_tests)
   set(oneValueArgs COMPILATION_FLAGS BINARY_DIRECTORY)
-  set(multiValueArgs ADDITIONAL_SOURCES)
+  set(multiValueArgs ADDITIONAL_SOURCES LIBRARIES)
   cmake_parse_arguments(UTILS_SETUP_C_ALL_TESTS "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   file(
@@ -169,6 +171,69 @@ function(utils_setup_c_all_tests)
     ADDITIONAL_SOURCES "${UTILS_SETUP_C_ALL_TESTS_ADDITIONAL_SOURCES}"
     COMPILATION_FLAGS "${UTILS_SETUP_C_ALL_TESTS_COMPILATION_FLAGS}"
     BINARY_DIRECTORY "${UTILS_SETUP_C_ALL_TESTS_BINARY_DIRECTORY}"
+    LIBRARIES ${UTILS_SETUP_C_ALL_TESTS_LIBRARIES}
   )
 endfunction(utils_setup_c_all_tests)
+
+# Adds test targets for all test files found under the tests directory.
+# Tests are expected to be located at the tests directory and should be named
+# as "test_<test name>.c"
+# In addition, the CMAKE_PROJECT_NAME variable is expected to be defined.
+#
+# Params:
+# * SOURCES - Test sources
+# * COMPILATION_FLAGS - Compliation flags
+function(utils_setup_test_lib)
+  set(oneValueArgs COMPILATION_FLAGS)
+  set(multiValueArgs SOURCES)
+  cmake_parse_arguments(UTILS_SETUP_TEST_LIB "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  add_library("Test" STATIC ${UTILS_SETUP_TEST_LIB_SOURCES})
+  target_link_libraries("Test" ${CMAKE_PROJECT_NAME})
+  set_target_properties(
+    "Test"
+    PROPERTIES COMPILE_FLAGS "${UTILS_SETUP_TEST_LIB_COMPILATION_FLAGS}"
+  )
+endfunction(utils_setup_test_lib)
+
+# Adds linter target.
+#
+# Params:
+# * INCLUDE_DIRECTORY
+# * SOURCES - The sources to check
+# * WORKING_DIRECTORY
+function(utils_cppcheck)
+  set(oneValueArgs INCLUDE_DIRECTORY WORKING_DIRECTORY)
+  set(multiValueArgs SOURCES)
+  cmake_parse_arguments(UTILS_CPPCHECK "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
+
+  if (CMAKE_CXX_CPPCHECK)
+    add_custom_target(cppcheck ALL
+      ${CMAKE_CXX_CPPCHECK}
+      --enable=all --inline-suppr --error-exitcode=1 --suppress=missingIncludeSystem -I ${UTILS_CPPCHECK_INCLUDE_DIRECTORY} ${UTILS_CPPCHECK_SOURCES}
+      WORKING_DIRECTORY "${UTILS_CPPCHECK_WORKING_DIRECTORY}")
+  endif()
+endfunction(utils_cppcheck)
+
+# Adds formatter target.
+#
+# Params:
+# * CONFIG_FILE - The uncrustify cfg
+# * SOURCES - The sources to format
+function(utils_uncrustify)
+  set(oneValueArgs CONFIG_FILE)
+  set(multiValueArgs SOURCES)
+  cmake_parse_arguments(UTILS_UNCRUSTIFY "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  find_program(CMAKE_CXX_UNCRUSTIFY NAMES uncrustify)
+
+  if (CMAKE_CXX_UNCRUSTIFY)
+    add_custom_target(uncrustify ALL
+      uncrustify
+      -c ${UTILS_UNCRUSTIFY_CONFIG_FILE}
+      --no-backup ${UTILS_UNCRUSTIFY_SOURCES})
+  endif()
+endfunction(utils_uncrustify)
 
