@@ -1,5 +1,12 @@
 ## CHANGELOG
 
+### v0.5.0 (2023-08-12)
+
+* utils_uncrustify and utils_cppcheck now support optional ALL FALSE argument
+* New utils_build_file_increment function
+* New utils_xxd function
+* New utils_xxd_all function
+
 ### v0.4.0 (2020-09-25)
 
 * New utils_setup_c_all_tests function

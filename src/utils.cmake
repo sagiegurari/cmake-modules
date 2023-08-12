@@ -13,17 +13,17 @@ function(utils_git_clone)
     "Cloning Git Repository: ${UTILS_GIT_CLONE_REPO_NAME} "
     "URL: ${UTILS_GIT_CLONE_URL} "
     "Tag: ${UTILS_GIT_CLONE_TAG_NAME}"
-  )
+    )
 
   execute_process(
     COMMAND git clone ${UTILS_GIT_CLONE_URL}
-  )
+    )
 
   if(UTILS_GIT_CLONE_TAG_NAME)
     execute_process(
       COMMAND git checkout tags/${UTILS_GIT_CLONE_TAG_NAME}
       WORKING_DIRECTORY ${UTILS_GIT_CLONE_REPO_NAME}
-    )
+      )
   endif()
 endfunction(utils_git_clone)
 
@@ -41,7 +41,7 @@ function(utils_github_clone_repo)
     URL https://github.com/${UTILS_GITHUB_CLONE_REPO_REPO_USERNAME}/${UTILS_GITHUB_CLONE_REPO_REPO_NAME}.git
     REPO_NAME ${UTILS_GITHUB_CLONE_REPO_REPO_NAME}
     TAG_NAME ${UTILS_GITHUB_CLONE_REPO_TAG_NAME}
-  )
+    )
 endfunction(utils_github_clone_repo)
 
 # Sets variables to an external library.
@@ -81,18 +81,18 @@ function(utils_add_external_github_lib)
     "Adding External Library: ${UTILS_ADD_EXTERNAL_GITHUB_LIB_LIBRARY_NAME} "
     "Github Repostiory: ${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_USERNAME}/${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_NAME} "
     "Tag: ${UTILS_ADD_EXTERNAL_GITHUB_LIB_TAG_NAME}"
-  )
+    )
 
   utils_github_clone_repo(
     REPO_USERNAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_USERNAME}
     REPO_NAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_NAME}
     TAG_NAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_TAG_NAME}
-  )
+    )
 
   utils_set_standard_external_lib_variables(
     NAME ${UTILS_ADD_EXTERNAL_GITHUB_LIB_LIBRARY_NAME}
     PATH "${UTILS_ADD_EXTERNAL_GITHUB_LIB_LIBRARY_PARENT_DIRECTORY}/${UTILS_ADD_EXTERNAL_GITHUB_LIB_REPO_NAME}"
-  )
+    )
   # proxy variables
   set("${X_EXTERNAL_LIB_NAME}_ROOT" "${${X_EXTERNAL_LIB_NAME}_ROOT}" PARENT_SCOPE)
   set("${X_EXTERNAL_LIB_NAME}_SOURCES" "${${X_EXTERNAL_LIB_NAME}_SOURCES}" PARENT_SCOPE)
@@ -127,12 +127,12 @@ function(utils_setup_c_test)
     set_target_properties(
       test_${TEST_NAME}
       PROPERTIES COMPILE_FLAGS "${UTILS_SETUP_C_TEST_COMPILATION_FLAGS}"
-    )
+      )
     add_test(
       NAME ${TEST_NAME}
       WORKING_DIRECTORY ${UTILS_SETUP_C_TEST_BINARY_DIRECTORY}
       COMMAND test_${TEST_NAME}
-    )
+      )
   endforeach(TEST_NAME)
 endfunction(utils_setup_c_test)
 
@@ -155,7 +155,7 @@ function(utils_setup_c_all_tests)
     GLOB TEST_FILES
     LIST_DIRECTORIES false
     ./tests/test_*.c
-  )
+    )
 
   foreach(TEST_NAME ${TEST_FILES})
     string(REGEX REPLACE ".*/tests/test_" "" TEST_NAME ${TEST_NAME})
@@ -172,7 +172,7 @@ function(utils_setup_c_all_tests)
     COMPILATION_FLAGS "${UTILS_SETUP_C_ALL_TESTS_COMPILATION_FLAGS}"
     BINARY_DIRECTORY "${UTILS_SETUP_C_ALL_TESTS_BINARY_DIRECTORY}"
     LIBRARIES ${UTILS_SETUP_C_ALL_TESTS_LIBRARIES}
-  )
+    )
 endfunction(utils_setup_c_all_tests)
 
 # Adds test targets for all test files found under the tests directory.
@@ -193,7 +193,7 @@ function(utils_setup_test_lib)
   set_target_properties(
     "Test"
     PROPERTIES COMPILE_FLAGS "${UTILS_SETUP_TEST_LIB_COMPILATION_FLAGS}"
-  )
+    )
 endfunction(utils_setup_test_lib)
 
 # Adds linter target.
@@ -202,15 +202,22 @@ endfunction(utils_setup_test_lib)
 # * INCLUDE_DIRECTORY
 # * SOURCES - The sources to check
 # * WORKING_DIRECTORY
+# * [ALL] - FALSE for not ALL, otherwise any value (including undefined) is by default ALL
 function(utils_cppcheck)
-  set(oneValueArgs INCLUDE_DIRECTORY WORKING_DIRECTORY)
+  set(oneValueArgs INCLUDE_DIRECTORY WORKING_DIRECTORY ALL)
   set(multiValueArgs SOURCES)
   cmake_parse_arguments(UTILS_CPPCHECK "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
 
   if (CMAKE_CXX_CPPCHECK)
-    add_custom_target(cppcheck ALL
+    if ("${UTILS_CPPCHECK_ALL}" STREQUAL "FALSE")
+      set(ALL)
+    else()
+      set(ALL ALL)
+    endif()
+
+    add_custom_target(cppcheck ${ALL}
       ${CMAKE_CXX_CPPCHECK}
       --enable=all --inline-suppr --error-exitcode=1 --suppress=missingIncludeSystem -I ${UTILS_CPPCHECK_INCLUDE_DIRECTORY} ${UTILS_CPPCHECK_SOURCES}
       WORKING_DIRECTORY "${UTILS_CPPCHECK_WORKING_DIRECTORY}")
@@ -222,18 +229,125 @@ endfunction(utils_cppcheck)
 # Params:
 # * CONFIG_FILE - The uncrustify cfg
 # * SOURCES - The sources to format
+# * [ALL] - FALSE for not ALL, otherwise any value (including undefined) is by default ALL
 function(utils_uncrustify)
-  set(oneValueArgs CONFIG_FILE)
+  set(oneValueArgs CONFIG_FILE ALL)
   set(multiValueArgs SOURCES)
   cmake_parse_arguments(UTILS_UNCRUSTIFY "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   find_program(CMAKE_CXX_UNCRUSTIFY NAMES uncrustify)
 
   if (CMAKE_CXX_UNCRUSTIFY)
-    add_custom_target(uncrustify ALL
+    if ("${UTILS_UNCRUSTIFY_ALL}" STREQUAL "FALSE")
+      set(ALL)
+    else()
+      set(ALL ALL)
+    endif()
+
+    add_custom_target(uncrustify ${ALL}
       uncrustify
       -c ${UTILS_UNCRUSTIFY_CONFIG_FILE}
       --no-backup ${UTILS_UNCRUSTIFY_SOURCES})
   endif()
 endfunction(utils_uncrustify)
+
+# Increments the build file (or creates a new one is
+# does not exist) and sets the variable to the new value.
+# This can be wrapped via add_custom_command to a standalone cmake
+# file that can trigger this function.
+#
+# Params:
+# * BUILD_NUMBER_FILE - The path to the build number file
+# * NAME - The variable name to hold the new build number
+function(utils_build_file_increment)
+  set(oneValueArgs BUILD_NUMBER_FILE NAME)
+  cmake_parse_arguments(UTILS_BUILD_FILE_INCREMENT "" "${oneValueArgs}" "" ${ARGN})
+
+  if(EXISTS ${UTILS_BUILD_FILE_INCREMENT_BUILD_NUMBER_FILE})
+    file(READ ${UTILS_BUILD_FILE_INCREMENT_BUILD_NUMBER_FILE} BUILD_NUMBER)
+    math(EXPR BUILD_NUMBER "${BUILD_NUMBER}+1")
+  else()
+    set(BUILD_NUMBER "1")
+  endif()
+
+  message("Build Number: ${BUILD_NUMBER}")
+
+  file(WRITE ${UTILS_BUILD_FILE_INCREMENT_BUILD_NUMBER_FILE} "${BUILD_NUMBER}")
+
+  set("${UTILS_BUILD_FILE_INCREMENT_NAME}" "${BUILD_NUMBER}" PARENT_SCOPE)
+endfunction(utils_build_file_increment)
+
+# Runs xxd on the given file to generate a C header content,
+# wraps it with header macros and writes it to a file.
+#
+# Params:
+# * INPUT_RAW_FILE - The input file to invoke the xxd on
+# * OUTPUT_HEADER_FILE - The output header file that will hold the generated content
+# * HEADER_NAME - Used in the header def macro
+# * ROOT_DIRECTORY - Used to get relative path to output file which impacts header content
+function(utils_xxd)
+  set(oneValueArgs INPUT_RAW_FILE OUTPUT_HEADER_FILE HEADER_NAME ROOT_DIRECTORY)
+  cmake_parse_arguments(UTILS_XXD "" "${oneValueArgs}" "" ${ARGN})
+
+  get_filename_component(ROOT_DIRECTORY "${UTILS_XXD_ROOT_DIRECTORY}" ABSOLUTE)
+  file(RELATIVE_PATH INPUT_RAW_FILE "${ROOT_DIRECTORY}" "${UTILS_XXD_INPUT_RAW_FILE}")
+
+  message("Running xxd for file: ${INPUT_RAW_FILE}")
+
+  execute_process(
+    COMMAND "xxd" "-i" "${INPUT_RAW_FILE}"
+    WORKING_DIRECTORY "${ROOT_DIRECTORY}"
+    OUTPUT_VARIABLE HEADER_CONTENT
+    COMMAND_ERROR_IS_FATAL ANY
+    )
+
+  set(HEADER_CONTENT "#ifndef ${UTILS_XXD_HEADER_NAME}_H\n#define ${UTILS_XXD_HEADER_NAME}_H\n${HEADER_CONTENT}\n#endif\n")
+
+  if(EXISTS ${UTILS_XXD_OUTPUT_HEADER_FILE})
+    file(READ ${UTILS_XXD_OUTPUT_HEADER_FILE} OLD_HEADER_CONTENT)
+    if (NOT "${HEADER_CONTENT}" STREQUAL "${OLD_HEADER_CONTENT}")
+      file(WRITE ${UTILS_XXD_OUTPUT_HEADER_FILE} "${HEADER_CONTENT}")
+    endif()
+  else()
+    file(WRITE ${UTILS_XXD_OUTPUT_HEADER_FILE} "${HEADER_CONTENT}")
+  endif()
+
+  message(
+    "Created Header File: ${UTILS_XXD_OUTPUT_HEADER_FILE}\n"
+    "Content:\n${HEADER_CONTENT}"
+    )
+endfunction(utils_xxd)
+
+# Runs xxd on all provided files and generate a C header file for them.
+#
+# Params:
+# * INPUT_RAW_FILES - All files to run xxd on
+# * ROOT_DIRECTORY - Used to get relative path to output file which impacts header content
+function(utils_xxd_all)
+  set(oneValueArgs ROOT_DIRECTORY)
+  set(multiValueArgs INPUT_RAW_FILES)
+  cmake_parse_arguments(UTILS_XXD_ALL "" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  foreach(INPUT_RAW_FILE ${UTILS_XXD_ALL_INPUT_RAW_FILES})
+    get_filename_component(OUTPUT_DIRECTORY ${INPUT_RAW_FILE} DIRECTORY)
+    get_filename_component(BASE_FILENAME ${INPUT_RAW_FILE} NAME_WLE)
+    set(OUTPUT_HEADER_FILE "${OUTPUT_DIRECTORY}/${BASE_FILENAME}_resource_template.h")
+    string(TOUPPER "${BASE_FILENAME}_resource_template" HEADER_NAME)
+
+    message(
+      "XXD Args\n"
+      "Raw File: ${INPUT_RAW_FILE}\n"
+      "Output Header File: ${OUTPUT_HEADER_FILE}\n"
+      "Header Name: ${HEADER_NAME}\n"
+      "Root Directory: ${UTILS_XXD_ALL_ROOT_DIRECTORY}"
+      )
+
+    utils_xxd(
+      INPUT_RAW_FILE "${INPUT_RAW_FILE}"
+      OUTPUT_HEADER_FILE "${OUTPUT_HEADER_FILE}"
+      HEADER_NAME "${HEADER_NAME}"
+      ROOT_DIRECTORY "${UTILS_XXD_ALL_ROOT_DIRECTORY}"
+      )
+  endforeach(INPUT_RAW_FILE)
+endfunction(utils_xxd_all)
 

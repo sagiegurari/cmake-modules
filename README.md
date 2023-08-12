@@ -20,6 +20,10 @@ Those include:
 * Downloading github repository
 * Setting variables for sources, headers, etc... for downloaded repositories
 * Add test targets easily
+* Run ccpcheck
+* Run uncrustify
+* Create and increment build file
+* Run xxd on resource files
 
 <a name="usage"></a>
 
