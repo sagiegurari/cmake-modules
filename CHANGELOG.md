@@ -7,6 +7,12 @@
 * New utils_xxd function
 * New utils_xxd_all function
 
+### v0.4.1 (2023-01-02)
+
+* Setup tests now accepts additional library dependencies
+* New cpp check function
+* New uncrustify function
+
 ### v0.4.0 (2020-09-25)
 
 * New utils_setup_c_all_tests function
