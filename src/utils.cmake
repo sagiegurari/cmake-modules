@@ -351,3 +351,43 @@ function(utils_xxd_all)
   endforeach(INPUT_RAW_FILE)
 endfunction(utils_xxd_all)
 
+# Reads the example source file and pushes the content into a marked
+# block inside the README.md file wrapped with code block characters.
+# It will search for prefix and suffix:
+# <!-- example source start -->
+# <!-- example source end -->
+# and push the content in between.
+# This can be wrapped via add_custom_command to a standalone cmake
+# file that can trigger this function.
+#
+# Params:
+# * EXAMPLE_FILE - The path to the example source file
+# * DOCUMENT_FILE - The path to the document file to modify
+# * SOURCE_TYPE - The type of source syntax for the markdown code block
+function(utils_embed_example_source_in_readme)
+  set(oneValueArgs EXAMPLE_FILE DOCUMENT_FILE SOURCE_TYPE)
+  cmake_parse_arguments(UTILS_EMBED_EXAMPLE_SOURCE_IN_README "" "${oneValueArgs}" "" ${ARGN})
+
+  if(
+      EXISTS ${UTILS_EMBED_EXAMPLE_SOURCE_IN_README_EXAMPLE_FILE}
+      AND
+      EXISTS ${UTILS_EMBED_EXAMPLE_SOURCE_IN_README_DOCUMENT_FILE}
+      )
+    file(READ ${UTILS_EMBED_EXAMPLE_SOURCE_IN_README_EXAMPLE_FILE} EXAMPLE_SOURCE)
+    file(READ ${UTILS_EMBED_EXAMPLE_SOURCE_IN_README_DOCUMENT_FILE} README_CONTENT)
+
+    string(STRIP "${EXAMPLE_SOURCE}" EXAMPLE_SOURCE)
+
+    string(CONCAT MARKDOWN_SOURCE
+      "<!-- example source start -->\n```"
+      "${UTILS_EMBED_EXAMPLE_SOURCE_IN_README_SOURCE_TYPE}"
+      "\n"
+      "${EXAMPLE_SOURCE}"
+      "\n```\n<!-- example source end -->")
+    string(REGEX REPLACE "<!-- example source start -->.*<!-- example source end -->" "CMAKE_EXAMPLE_SOURCE_INJECT" README_CONTENT "${README_CONTENT}")
+    string(REPLACE "CMAKE_EXAMPLE_SOURCE_INJECT" "${MARKDOWN_SOURCE}" README_CONTENT "${README_CONTENT}")
+
+    file(WRITE ${UTILS_EMBED_EXAMPLE_SOURCE_IN_README_DOCUMENT_FILE} "${README_CONTENT}")
+  endif()
+endfunction(utils_embed_example_source_in_readme)
+
