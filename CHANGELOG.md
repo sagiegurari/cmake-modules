@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### v0.5.1 (2023-09-21)
+
+* New utils_embed_example_source_in_readme function
+
 ### v0.5.0 (2023-08-12)
 
 * utils_uncrustify and utils_cppcheck now support optional ALL FALSE argument
